@@ -25,7 +25,7 @@ jobs:
     name: Validate and package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # index.html carries the entire site inside JSON <script> islands. This
       # re-parses them and asserts the social tags are present, so a corrupt
@@ -36,11 +36,19 @@ jobs:
       - name: Stage site
         run: make dist
 
-      - uses: actions/configure-pages@v5
+      # enablement creates the Pages site on first run; without it the action
+      # fails with "Get Pages site failed" on a repo that has never had Pages
+      # turned on.
+      - uses: actions/configure-pages@v6
+        with:
+          enablement: true
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+          # .nojekyll is a dotfile and would otherwise be dropped, leaving the
+          # artifact quietly different from what `make dist` produces locally.
+          include-hidden-files: true
 
   deploy:
     name: Deploy
@@ -51,7 +59,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       # Pages can report success before the CDN serves the new bundle, so poll
       # briefly rather than asserting on the first response.
