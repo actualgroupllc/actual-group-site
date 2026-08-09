@@ -104,7 +104,7 @@ verify: ## Check the live site serves the OG card and icons
 status: ## Show recent deployment runs
 	@gh run list --workflow=deploy.yml --limit=5
 
-setup: ## Point Pages at the Actions workflow (CI self-enables; use if that is blocked)
+setup: ## Create the Pages site — run once before the first deploy
 	@gh api -X POST "repos/$(REPO)/pages" -f 'build_type=workflow' --silent 2>/dev/null \
 	|| gh api -X PUT "repos/$(REPO)/pages" -f 'build_type=workflow' --silent
 	@echo "✓ Pages source set to GitHub Actions"

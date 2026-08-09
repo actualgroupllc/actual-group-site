@@ -36,12 +36,12 @@ jobs:
       - name: Stage site
         run: make dist
 
-      # enablement creates the Pages site on first run; without it the action
-      # fails with "Get Pages site failed" on a repo that has never had Pages
-      # turned on.
+      # No `enablement: true` here: creating a Pages site needs repo admin
+      # rights, which GITHUB_TOKEN cannot be granted via `permissions:`, so it
+      # fails with "Resource not accessible by integration". The site has to be
+      # created once out-of-band instead — `make setup`, or Settings > Pages
+      # with Source set to "GitHub Actions".
       - uses: actions/configure-pages@v6
-        with:
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v5
         with:
