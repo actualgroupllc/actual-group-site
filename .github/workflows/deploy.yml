@@ -1,0 +1,73 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
+  workflow_dispatch:
+
+# Least privilege: read the repo, mint an OIDC token for the Pages deployment.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deployments race. Queue rather than cancel, so a run that is
+# already publishing is allowed to finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Validate and package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # index.html carries the entire site inside JSON <script> islands. This
+      # re-parses them and asserts the social tags are present, so a corrupt
+      # bundle fails here instead of silently going live as a blank page.
+      - name: Validate bundle and social tags
+        run: make check
+
+      - name: Stage site
+        run: make dist
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+      # Pages can report success before the CDN serves the new bundle, so poll
+      # briefly rather than asserting on the first response.
+      - name: Smoke-test the published site
+        env:
+          URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 10); do
+            if curl -sfL "$URL" | grep -q 'og:image'; then break; fi
+            echo "waiting for $URL to serve the new build ($i/10)"
+            sleep 6
+          done
+          curl -sfL "$URL" | grep -o 'property="og:image" content="[^"]*"'
+          for f in favicon.ico assets/og-image.png assets/favicon.svg assets/apple-touch-icon.png; do
+            code=$(curl -so /dev/null -w '%{http_code}' "${URL}${f}")
+            printf '  %-22s %s\n' "$f" "$code"
+            [ "$code" = "200" ] || { echo "::error::${f} returned ${code}"; exit 1; }
+          done
