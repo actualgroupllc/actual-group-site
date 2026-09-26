@@ -9,7 +9,7 @@ SHELL := /bin/bash
 REPO     ?= actualgroupllc/actual-group-site
 BRANCH   ?= main
 PORT     ?= 8000
-SITE_URL ?= https://actualgroupllc.github.io/actual-group-site/
+SITE_URL ?= https://www.actualgll.com/
 MSG      ?= Update site
 
 ASSET_DIR  := assets

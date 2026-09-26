@@ -4,7 +4,8 @@ Single-page marketing site for Actual Group LLC (Aurora, CO) — Colorado Medica
 transition coordination: Targeted Case Management, Life Skills Training, and
 Household Setup.
 
-**Live:** https://actualgroupllc.github.io/actual-group-site/
+**Live:** https://www.actualgll.com/ (Pages also answers on
+https://actualgroupllc.github.io/actual-group-site/)
 
 Static site, no build step, no dependencies to install. GitHub Pages serves the
 files as they sit in the repo; `make` is local tooling that CI reuses.
